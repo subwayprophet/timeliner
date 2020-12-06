@@ -24,7 +24,7 @@
                 },
                 dontNeedtoWork : {
                     image: 'grapes',
-                    description: 'Work sucks. Better to lie around eating grapes like a Roman.'
+                    description: 'Work, schmork (schmerk?). Better to lie around eating grapes like a Roman.'
                 },
                 safety : {
                     image: 'castle',
@@ -37,6 +37,11 @@
             },
             registerDesideratum: function(desideratum) {
                 this.desiderata[desideratum.name] = desideratum;
+            },
+            showMessage: function(messageText) {
+                let t = this;
+                t.messageBox.text(messageText);
+                t.layer.draw();
             },
             init: function() {
                 let t = this;
@@ -56,8 +61,19 @@
                 t.stage.add(t.layer);
                 t.layer.draw();
                 
-                //now add starting images
+                //now add desiderata
                 t.initDesiderata();
+
+                //..and a space for messages
+                t.messageBox = new Konva.Text({
+                    x: 70,
+                    y:10,
+                    fontFamily: 'Calibri',
+                    fontSize: 24,
+                    text: '',
+                    fill: 'black'
+                });
+                t.layer.add(t.messageBox);
             },
             initDesiderata: function() {
                 let t = this;
@@ -148,6 +164,7 @@
             d.description = description;
             d.yell = function() {
                 console.log(d.name + ' YELLS!!!!!');
+                Timeliner.showMessage(d.description);
             }
         }
 
