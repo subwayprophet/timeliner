@@ -1,0 +1,156 @@
+<html>
+    <head>
+        <script src="https://unpkg.com/konva@7.0.3/konva.min.js"></script>
+    </head>
+
+    <body>
+
+        <div id="container" style="background: url('images/mountainpath.png')"></div>
+
+    </body>
+
+    <script>
+
+        window.onload = function() {
+            Timeliner.init();
+        }
+
+        var Timeliner = {
+            canvasId: 'container',
+            desiderataDefinitions: {
+                happyRetirement : {
+                    image: 'lounging',
+                    description: 'You want to be happy in retirement. That means doing nothing, right?'
+                },
+                dontNeedtoWork : {
+                    image: 'grapes',
+                    description: 'Work sucks. Better to lie around eating grapes like a Roman.'
+                },
+                safety : {
+                    image: 'castle',
+                    description: 'Be as safe as a nobleman in a castle.'
+                }
+            },
+            desiderata: {},
+            getDesideratum: function(desideratumName) {
+                return this.desiderata[desideratumName];
+            },
+            registerDesideratum: function(desideratum) {
+                this.desiderata[desideratum.name] = desideratum;
+            },
+            init: function() {
+                let t = this;
+
+                let canvas = document.getElementById(t.canvasId);
+                let canvasWidth = canvas.offsetWidth;
+                let canvasHeight = canvas.offsetHeight;
+
+                t.stage = new Konva.Stage({
+                    container: t.canvasId,   // id of container <div>
+                    width: canvasWidth,
+                    height: 1000
+                });
+                
+                // then create layer
+                t.layer = new Konva.Layer();
+                t.stage.add(t.layer);
+                t.layer.draw();
+                
+                //now add starting images
+                t.initDesiderata();
+            },
+            initDesiderata: function() {
+                let t = this;
+                let currX = 50;
+                let currY = 50;
+                let width = 100;
+                let height = 100;
+                let spacingY = 10;
+                for(desideratumName in t.desiderataDefinitions) {
+                    //define desideratum
+                    let desDef = t.desiderataDefinitions[desideratumName];
+                    let desideratum = new Desideratum(desideratumName,desDef['image'],desDef['description']);
+                    //register desideratum
+                    t.registerDesideratum(desideratum);
+                    //add image
+                    let imageName = desideratum.image;
+                    let image = t.addImage(desideratumName,imageName,currX,currY,width,height);
+                    currY = currY + height + spacingY;
+                }
+            },
+            addImage: function(desideratumName, imageName,x,y,width,height) {
+                let t = this;
+                var imgObj = new Image();
+                imgObj.onload = function() {
+                    var image = new Konva.Image({
+                        x: x,
+                        y: y,
+                        image: imgObj,
+                        width: width,
+                        height: height,
+                        draggable: true
+                    });
+                    image.on('mouseover', function() {
+                        console.log('mouse is over ' + imageName);
+                    })
+                    image.on('mouseup',function() {
+                        console.log('user just let go of ' + imageName + ' image representing ' + desideratumName);
+                        let desideratum = t.getDesideratum(desideratumName);
+                        desideratum.yell();
+                    })
+
+                    t.layer.add(image);
+                    t.layer.batchDraw();
+                };
+                imgObj.src = 'images/'+imageName+'.png';
+            }
+        }
+
+        // first we need to create a stage
+        var stage = new Konva.Stage({
+            container: 'container',   // id of container <div>
+            width: 500,
+            height: 500
+        });
+        
+        // then create layer
+        var layer = new Konva.Layer();
+        
+        // create our shape
+        var circle = new Konva.Circle({
+            x: stage.width() / 2,
+            y: stage.height() / 2,
+            radius: 70,
+            fill: 'red',
+            stroke: 'black',
+            strokeWidth: 4
+        });
+        
+        // add the shape to the layer
+        layer.add(circle);
+
+
+
+        // add the layer to the stage
+        stage.add(layer);
+        
+        // draw the image
+        layer.draw();
+  
+    </script>
+
+    <script>
+
+        var Desideratum = function(name,image,description) {
+            let d = this;
+            d.name = name;
+            d.image = image;
+            d.description = description;
+            d.yell = function() {
+                console.log(d.name + ' YELLS!!!!!');
+            }
+        }
+
+    </script>
+
+</html>

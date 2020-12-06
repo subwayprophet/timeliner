@@ -1,0 +1,64 @@
+<html>
+    <head>
+        <style>
+            .hidden {
+                display: none;
+            }
+        </style>
+        
+    </head>
+    <body>
+        <img id="grapes" src="images/grapes.png" alt="Roman eating grapes luxuriously" class="hidden" />
+        <img id="lounging" src="images/lounging.png" alt="Lounging on a beach" class="hidden" />
+        <img id="castle" src="images/castle.png" alt="Impregnable castle" class="hidden" />
+        <canvas id="myCanvas" width="800" height="800" style="background: url('images/mountainpath.png')"></canvas>
+    </body>
+
+    <script>
+
+        var canvas = document.getElementById("myCanvas");
+        var context = canvas.getContext("2d");
+
+        var Timeliner = {
+            imageNames: ['grapes','lounging','castle'],
+            images: [],
+            init: function() {
+                let v = this;
+                v.initImages();
+                v.initEventListeners();
+
+            },
+            initImages: function() {
+                let v = this;
+                for(imageName of v.imageNames) {
+                    let image = new Image();
+                    image.src = "images/"+imageName+'.png';
+                    v.images.push(image);
+                }
+            },
+            initEventListeners: function() {
+                let v = this;
+                for(image of v.images) {
+                    console.log('about to add event listener to ' + image);
+                    image.onmousedown = function() {
+                        console.log('clicked image: ' + image.src);
+                    }
+                }
+            },
+            showImages: function() {
+                let v = this;
+                let imageXSize = 50;
+                let imageYSize = 50;
+                let imageXOffset = 50;
+                let imageYOffset = 50;
+                let buffer = 5;
+                for(image of v.images) {
+                    context.drawImage(image,imageXOffset+buffer, imageYOffset+buffer, imageXSize, imageYSize);
+                    imageYOffset += imageYSize
+                    imageYOffset += buffer;
+                }
+            }
+        }
+
+    </script>    
+</html>
