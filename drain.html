@@ -1,0 +1,163 @@
+<html>
+
+<head>
+    <script src="https://unpkg.com/konva@7.0.3/konva.min.js"></script>
+</head>
+
+<body>
+
+    <input id="dollarsToAddInput" type="text" placeholder="dollars to add"/>
+    <button onclick="Drain.handleAddDollars()">add dollars!</button>
+
+    <br/>
+    <canvas id="canvas" width="500" height="500"></canvas>
+
+</body>
+
+
+<script>
+
+    window.onload = function () {
+        Drain.init();
+    }
+
+    var Drain = {
+        canvasId: 'canvas',
+        tankHeight: 400,
+        tankWidth: 200,
+        dollarCapacity: 1000,
+        dollarColor: 'green',
+        dollarsFull: 0,
+        pctFull: 0,
+        ctx: null,
+        init: function () {
+            let d = this;
+
+            let canvas = document.getElementById(d.canvasId);
+            let canvasWidth = canvas.offsetWidth;
+            let canvasHeight = canvas.offsetHeight;
+
+            let ctx = canvas.getContext('2d');
+            d.ctx = ctx;
+
+            d.animateFillTank(d.pctFull);
+        },
+        addPct: function(pctToAdd, callback) {
+            let d = this;
+            let pctTarget = d.pctFull + pctToAdd;
+            d.animateFillTank(pctTarget, callback);
+        },
+        handleAddDollars: function() {
+            let d = this;
+            let dollarsInput = document.getElementById('dollarsToAddInput');
+            d.addDollars(dollarsInput.value);
+        },
+        addDollars: function(dollarsToAdd) {
+            let d = this;
+            let pctToAdd = 100 * dollarsToAdd/d.dollarCapacity;
+            d.addPct(pctToAdd, function() {
+                d.dollarsFull += dollarsToAdd;
+            });
+        },
+        drawTank: function() {
+            let d = Drain;
+            let xOffset = d.tankWidth/2;
+            let yOffset = d.tankHeight/8;
+            let xCenter = xOffset * 2;
+            let yCenterTop = yOffset * 2;
+            let yCenterBottom = d.tankHeight + yOffset;
+            let xRadius = d.tankWidth;
+            let yRadius = d.tankHeight/8;
+    
+            let ctx = d.ctx;
+
+            //draw top
+            ctx.beginPath();
+            ctx.ellipse(xCenter, yCenterTop, xRadius, yRadius, 0, 0, 2 * Math.PI);
+            ctx.stroke();
+
+            //draw bottom
+            ctx.beginPath();
+            ctx.ellipse(xCenter, yCenterBottom, xRadius, yRadius, 0, 0, 2 * Math.PI);
+            ctx.stroke();
+            if(d.pctFull > 0) {
+                ctx.fillStyle = d.dollarColor;
+                ctx.fill();
+            }
+
+            //draw left side
+            ctx.beginPath();
+            ctx.moveTo(0,yCenterTop);
+            ctx.lineTo(0,yCenterBottom);
+            ctx.stroke();
+
+            //draw right side
+            ctx.beginPath();
+            ctx.moveTo(d.tankWidth*2,yCenterTop);
+            ctx.lineTo(d.tankWidth*2,yCenterBottom);
+            ctx.stroke();
+
+            //show pct full in numbers
+            ctx.font = '20px Verdana';
+            ctx.textAlign = 'start';
+            ctx.fillText(d.pctFull + '%',20,40);
+        },
+        animateFillTank: function(targetPctFull, callback) {
+            let d = this;
+            let currPctFull = d.pctFull;
+            let drawNextLevel = setInterval(function() {
+                d.emptyTank();
+                d.fillTank(currPctFull);
+                if(currPctFull >= targetPctFull) {
+                    clearInterval(drawNextLevel);
+                    callback && callback();
+                }
+            currPctFull++;
+            },20)
+        },
+        emptyTank: function() {
+            let d = this;
+            let ctx = d.ctx;
+            ctx.clearRect(0,0,d.tankWidth*2,d.tankHeight);
+            d.drawTank();
+        },
+        fillTank: function (pctFull) {
+            let d = this;
+            
+            let ctx = d.ctx;
+
+            let pctMultiplier = pctFull/100;
+            let yOffset = d.tankHeight/8;
+            let filledHeight = d.tankHeight * pctMultiplier - yOffset;
+            if(filledHeight < 0 ) filledHeight = 0;
+            let yTop = yOffset + d.tankHeight - filledHeight;
+
+            //main rectangle fill
+            ctx.beginPath();
+            ctx.rect(0,yTop,d.tankWidth*2,filledHeight);
+            ctx.fillStyle = d.dollarColor;
+            ctx.fill();
+
+            d.pctFull = pctFull;
+
+            //top circle fill
+            if(d.pctFull > 0) {
+                let xOffset = d.tankWidth/2;
+                let xCenter = xOffset * 2;
+                let yCenterTop = yOffset * 2;
+                let yCenterBottom = d.tankHeight + yTop;
+                let xRadius = d.tankWidth;
+                let yRadius = d.tankHeight/8;
+                ctx.beginPath();
+                ctx.fillStyle = d.dollarColor;
+                ctx.ellipse(xCenter, yTop, xRadius, yRadius, 0, 0, 2 * Math.PI);
+                ctx.fill();    
+            }
+
+        }
+    }
+
+
+</script>
+
+</html>
