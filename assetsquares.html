@@ -56,7 +56,6 @@
 
         var zobdo = {
             "name": "flare",
-            "total": 103965,
             "children": [
                 {
                     "name": "Cash",
@@ -118,19 +117,33 @@
         };
 
         function kickoff() {
+            initObj(zobdo);
             animateTreeMap(zobdo);
+        }
+
+        function initObj(obj) {
+            obj.finalTotal = getTotal(obj);
+            obj.total = 0;
+            let children = obj.children;
+            for(let i=0; i<children.length; i++) {
+                let child = children[i];
+                if(child.children) {
+                    let actualChildren = child.children;
+                    for(let j=0; j<actualChildren.length; j++) {
+                        let actualChild = actualChildren[j];
+                        actualChild.finalSize = actualChild.size;
+                        actualChild.size = 0;
+                    }
+                }
+            }
+
         }
 
         let counter = 0;
         function animateTreeMap(inputObj) {
-            let isFirst = counter === 0;
             let currTotal = inputObj.total;
-            let finalTotal = inputObj.finalTotal;
-            if(isFirst) {
-                currTotal = 0;
-                finalTotal = inputObj.total;
-            }
-            renderNextTreeMap(inputObj,isFirst);
+            let finalTotal = getTotal(inputObj);
+            renderNextTreeMap(inputObj);
             counter++;
             currTotal = inputObj.total;
             if (currTotal < finalTotal) {
@@ -138,27 +151,39 @@
                     animateTreeMap(inputObj);
                 })
             }
-            
         }
 
-        function renderNextTreeMap(inputObj,isFirst) {
-            var obj = makeNextObj(inputObj,isFirst);
+        function getTotal(obj) {
+            let total = 0;
+            let children = obj.children;
+            for(let i=0; i<children.length; i++) {
+                let child = children[i];
+                if(child.children) {
+                    let actualChildren = child.children;
+                    for(let j=0; j<actualChildren.length; j++) {
+                        let actualChild = actualChildren[j];
+                        let increment = actualChild.finalSize
+                        if(!increment) increment = actualChild.size; //handle init scenario
+                        total += increment;
+                    }
+                }
+            }
+            return total;
+        }
+
+        function renderNextTreeMap(inputObj) {
+            var obj = makeNextObj(inputObj);
             let main = document.getElementById('mainwrapper');
             let key = document.getElementById('keycontainer');
             if(main) main.remove();
             if(key) key.remove();
             drawTreeMap(obj);
         }
-        function makeNextObj(inputObj, isFirst) {
-            if(!isFirst) isFirst = false;
+        function makeNextObj(inputObj) {
             let retObj = inputObj;
             let maxFrames = 20;
             let children = retObj.children;
 
-            if(isFirst) {
-                retObj.finalTotal = retObj.total;
-                retObj.total = 0;
-            }
             retObj.total += retObj.finalTotal / maxFrames;
 
             for(let i=0; i<children.length; i++) {
@@ -167,10 +192,6 @@
                     let actualChildren = child.children;
                     for(let j=0; j<actualChildren.length; j++) {
                         let actualChild = actualChildren[j];
-                        if(isFirst) {
-                            actualChild.finalSize = actualChild.size;
-                            actualChild.size = 0;
-                        }
                         let interval = actualChild.finalSize / maxFrames;
                         let nextVal = actualChild.size + interval;
                         actualChild.size = nextVal > actualChild.finalSize ? actualChild.finalSize : nextVal;
