@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style type="text/css">
+    @import url('https://fonts.googleapis.com/css?family=Lato:400,400italic,700,700italic');
+
+    body {
+        font-family: 'Lato', Arial, Helvetica, sans-serif;
+        font-size: 16px;
+    }
+
+    .node {
+        border: solid 1px white;
+        font: 0.625em sans-serif;
+        overflow: hidden;
+        position: absolute;
+        text-indent: 2px;
+        cursor: default;
+    }
+
+    .ledg {
+        font: .8em sans-serif;
+        position: absolute;
+        text-indent: 5px;
+    }
+
+    a {
+        color: dimgray;
+    }
+
+    .toolTip {
+        position: absolute;
+        display: none;
+        width: auto;
+        height: auto;
+        background: none repeat scroll 0 0 white;
+        border: 0 none;
+        border-radius: 8px 8px 8px 8px;
+        box-shadow: -3px 3px 15px #888888;
+        color: black;
+        font: 12px sans-serif;
+        padding: 5px;
+        text-align: center;
+    }
+</style>
+
+<body>
+    <br />
+    <input type="button" value="assetGROW" onclick="kickoff()"/>
+    <!--I included this so the tooltip never appears 
+    to be under the edge of the iframe, sure I could appeand
+    to the parrent page, but in the website I work on I cannot
+    so simply append a div and have it play nicely-->
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script type="text/javascript">
+
+
+        var zobdo = {
+            "name": "flare",
+            "total": 103965,
+            "children": [
+                {
+                    "name": "Cash",
+                    "children": [
+                        {
+                            "name": "Bag under pillow",
+                            "size": 15809.3
+                        },
+                        {
+                            "name": "Stash in glove compartment",
+                            "size": 19853.5
+                        },
+                        {
+                            "name": "Stuffed into mattress",
+                            "size": 8600.8
+                        }
+                    ]
+                },
+                {
+                    "name": "Stocks",
+                    "children": [
+                        {
+                            "name": "MSFT",
+                            "size": 20988.7
+                        },
+                        {
+                            "name": "GOOGL",
+                            "size": 3926.1
+                        }
+                    ]
+                },
+                {
+                    "name": "Bonds",
+                    "children": [
+                        {
+                            "name": "NYC Sewer Authority",
+                            "size": 376000.6
+                        }
+                    ]
+                },
+                {
+                    "name": "Real Estate",
+                    "children": [
+                        {
+                            "name": "Tiny House",
+                            "size": 120000,
+                            "image": "images/house2.jpg"
+                        },
+                        {
+                            "name": "Little House",
+                            "description": "1000 Bozo Street. Built in 1702. Gifted to John Pell in return for two million rotten peacock eggs.",
+                            "size": 360000,
+                            "image": "images/house1.jpg"
+                        }
+                    ]
+                }
+
+            ]
+        };
+
+        function kickoff() {
+            animateTreeMap(zobdo);
+        }
+
+        let counter = 0;
+        function animateTreeMap(inputObj) {
+            let isFirst = counter === 0;
+            let currTotal = inputObj.total;
+            let finalTotal = inputObj.finalTotal;
+            if(isFirst) {
+                currTotal = 0;
+                finalTotal = inputObj.total;
+            }
+            renderNextTreeMap(inputObj,isFirst);
+            counter++;
+            currTotal = inputObj.total;
+            if (currTotal < finalTotal) {
+                window.requestAnimationFrame(function() {
+                    animateTreeMap(inputObj);
+                })
+            }
+            
+        }
+
+        function renderNextTreeMap(inputObj,isFirst) {
+            var obj = makeNextObj(inputObj,isFirst);
+            let main = document.getElementById('mainwrapper');
+            let key = document.getElementById('keycontainer');
+            if(main) main.remove();
+            if(key) key.remove();
+            drawTreeMap(obj);
+        }
+        function makeNextObj(inputObj, isFirst) {
+            if(!isFirst) isFirst = false;
+            let retObj = inputObj;
+            let maxFrames = 20;
+            let children = retObj.children;
+
+            if(isFirst) {
+                retObj.finalTotal = retObj.total;
+                retObj.total = 0;
+            }
+            retObj.total += retObj.finalTotal / maxFrames;
+
+            for(let i=0; i<children.length; i++) {
+                let child = children[i];
+                if(child.children) {
+                    let actualChildren = child.children;
+                    for(let j=0; j<actualChildren.length; j++) {
+                        let actualChild = actualChildren[j];
+                        if(isFirst) {
+                            actualChild.finalSize = actualChild.size;
+                            actualChild.size = 0;
+                        }
+                        let interval = actualChild.finalSize / maxFrames;
+                        let nextVal = actualChild.size + interval;
+                        actualChild.size = nextVal > actualChild.finalSize ? actualChild.finalSize : nextVal;
+                    }
+                }
+            }
+            return retObj;
+        }
+
+        function drawTreeMap(root) {
+
+            var width = 1040 * (root.total/root.finalTotal),
+                height = 600 * (root.total/root.finalTotal);
+
+            var color = d3.scale.ordinal()
+                //.range(["#8CBAD1","#70D64E","#EF7087","#DDA335","#00AACC","#82CE8C","#839BE6","#C6D445","#C3B66B","D1A7CC","#70D3C5","#DD9692"])
+                //.range(["blue","yellow","green","orange"])
+                .range(["black", "#70D64E", "#EF7087", "#DDA335", "#00AACC", "#82CE8C", "#839BE6", "#C6D445", "#C3B66B", "#D1A7CC", "#70D3C5", "#DD9692", "#8CBAD1"])
+
+            var treemap = d3.layout.treemap()
+                .size([width, height])
+                .padding(.25) //I like the thin interal lines, the group seporations are set in the CSS
+                .value(function (d) { return d.size; });
+
+            var div = d3.select("body").append("div")
+                .attr("id","mainwrapper")
+                .attr("class", "treemap")
+                .style("position", "relative")
+                .style("width", width + "px")
+                .style("height", height + "px");
+
+            var ledg = d3.select("body").append("div")
+                .attr("id","keycontainer")
+                .style("position", "relative")
+                .style("width", width + "px")
+                .style("height", height + "px");
+
+            var tool = d3.select("body").append("div").attr("class", "toolTip");
+
+            d3.select(self.frameElement).style("height", height + 300 + "px");
+            d3.select(self.frameElement).style("width", width + 20 + "px");
+
+            function formatMoney(num) {
+                return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")
+            };
+
+            function roundToTwo(num) {
+                return +(Math.round(num + "e+2") + "e-2");
+            };
+            //d3.json("http://localhost:8000/treemapbig.json", function (error, root) {
+            //    if (error) throw error;
+
+            div.selectAll(".node")
+                .data(treemap.nodes(root))
+                .enter().append("div")
+                .attr("class", "node")
+                .style("left", function (d) { return d.x + "px"; })
+                .style("top", function (d) { return d.y + "px"; })
+                .style("width", function (d) { return Math.max(0, d.dx - 1) + "px"; })
+                .style("height", function (d) { return Math.max(0, d.dy - 1) + "px"; })
+                .style("background", function (d) { return d.children ? color(d.name) : null; })
+                .style('background-image', function (d) { return 'url("' + d.image + '")'; })
+                .style('background-size', 'cover')
+                .style('font-size', function (d) {
+                    let maxPx = 40;
+                    let actualPx = (d.value / root.total) * 100;
+                    return (actualPx > maxPx ? maxPx : actualPx) + 'px';
+                })
+                .text(function (d) { return d.children ? null : (d.dy < 10) ? null : (d.dx < 10) ? null : (d.name).length < (d.dx / 4) ? d.name + ' ' + roundToTwo((d.value / root.value) * 100) + '%' : (d.dy < 25) ? null : ((d.name).length < (d.dx / 2.5)) ? d.name + ' ' + roundToTwo((d.value / root.value) * 100) + '%' : null })
+                .on("mousemove", function (d) {
+                    tool.style("left", d3.event.pageX + 10 + "px")
+                    tool.style("top", d3.event.pageY - 20 + "px")
+                    tool.style("display", "inline-block");
+                    tool.html(d.children ? null : d.name + "<br>" + ' $ ' + formatMoney(Math.round(d.size * 1000)) + ' ' + roundToTwo((d.value / root.value) * 100) + '%');
+                    if (d.description) tool.html(tool.html() + '<br>' + d.description);
+                }).on("mouseout", function (d) {
+                    tool.style("display", "none");
+                });
+            //});
+
+            /*
+            ledg.append('text')
+                .style("font-size", "10px")
+                 .style("position", "absolute")
+                .style("text-anchor", "left")
+                .attr("class", "source")
+                .html("Source: <a target='_blank' href='http://bber.unm.edu/visualizations/for_blogs/2017RecommendVolII.pdf' title='Source PDF'>State of New Mexico Report of the Legislative Finance Committee to the Fifty-Second Legislature Second Session.</a> All funding sources.")
+                .style("left", "4px")
+                .style("top", "2px");
+            
+            ledg.append('text')
+                .style("position", "absolute")
+                .style("font-size", "10px")
+                .style("text-anchor", "left")
+                .attr("class", "attribution")
+                .html("Prepared by: Nathan Dobie for UNM Bureau of Business & Economic Research, March 2016")
+                .style("left", "4px")
+                .style("top", "16px");
+            */
+
+            ledg.append('text')
+                .style("position", "absolute")
+                .style("text-anchor", "left")
+                .attr("class", "attribution")
+                .html("Asset Type")
+                .style("left", "5px")
+                .style("top", "34px");
+
+            var ledgColors = ["#70D64E", "#EF7087", "#DDA335", "#00AACC", "#82CE8C", "#839BE6", "#C6D445", "#C3B66B", "#D1A7CC", "#70D3C5", "#DD9692", "#8CBAD1"]
+                , ledgLabels = ["Cash", "Stocks", "Bonds", "Real Estate", "Precious Metals"]
+
+            /*
+            for (i = 0; i < 12; i++) {
+                ledg.append('div')
+                    .attr("class", "ledg")
+                    .style("width", "350px")
+                    .style("height", "15px")
+                    .style("left", "5px")
+                    .style("top", function (d) { return (55 + 18 * i) + "px" })
+                    .text(function (d) { return ledgLabels[i] })
+                    .style("background", function (d) { return ledgColors[i] })
+            };
+            */
+        }
+    </script>
+</body>

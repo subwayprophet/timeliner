@@ -1,0 +1,62 @@
+{
+    "name": "flare",
+    "children": [
+      {
+        "name": "Cash",
+        "children": [
+          {
+            "name": "Bag under pillow",
+            "size": 15809.3
+          },
+          {
+            "name": "Stash in glove compartment",
+            "size": 19853.5
+          },
+          {
+            "name": "Stuffed into mattress",
+            "size": 8600.8
+          }
+        ]
+      },
+      {
+        "name": "Stocks",
+        "children": [
+          {
+            "name": "MSFT",
+            "size": 20988.7
+          },
+          {
+            "name": "GOOGL",
+            "size": 3926.1
+          }
+        ]
+      },
+      {
+        "name": "Bonds",
+        "children": [
+          {
+            "name": "NYC Sewer Authority",
+            "size": 376000.6
+          }
+        ]
+      },
+      {
+        "name": "Real Estate",
+        "children": [
+          {
+            "name": "Big House",
+            "size": 650000,
+            "image": "images/house2.jpg"
+          },
+          {
+            "name": "Little House",
+            "description" : "1000 Bozo Street. Built in 1702. Gifted to John Pell in return for two million rotten peacock eggs.",
+            "size": 360000,
+            "image": "images/house1.jpg"
+          }
+        ]
+      }
+ 
+    ]
+  }
+  
